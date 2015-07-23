@@ -1,0 +1,41 @@
+extends layout
+
+block content
+	.homepage-container
+		.slideshow
+			#slideshow
+				.slide
+					h2 Realtime & Free
+					.slide-image
+			// #slideshow
+			
+		.login-box
+				h3 Free & ready to go web chat room.
+				p
+					a#btn.sb.sb-small(href="/login") 
+						i 
+						| login
+					em or
+					a#twitbutt.sb.sb-small.sb-twitter(href="/auth/twitter") 
+						i 
+						| Sign in with Twitter
+					em or
+					a#fbbutt.sb.sb-small.sb-facebook(href="/auth/facebook") 
+						i
+						| Sign in with facebook
+					em or
+					a#btn.sb.sb-small(href="/signup") 
+						i
+						| Signup
+
+		// #login-box 
+	// .homepage-container
+	
+	footer
+		| MyChatBox is an 
+		a(href='https://github.com/hritik09/MyChatBox.git', target="_blank") Open Source project 
+		| developed by 
+		a(href='http://twitter.com/hritik_09', target="_blank") Hritik Bhardwaj.
+
+	// JavaScript at the bottom for fast page loading 
+

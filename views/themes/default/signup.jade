@@ -1,0 +1,16 @@
+doctype html
+html
+  head
+      meta(name='viewport', content='width=device-width, initial-scale=1')
+      title= title
+      link(rel='stylesheet', href='/css/style.css')
+    body
+      block content
+        .container
+          form.form-signin(action="/signup", method="post")
+            h2.form-signin-heading Please sign up
+            input.input-block-level(type="text", name="email", placeholder="Email address")
+            input.input-block-level(type="password", name="password", placeholder="Password")
+            label.checkbox.
+              <input type="checkbox" value="remember-me" /> Remember me
+            button.btn.btn-large.btn-primary(type="submit") Sign up
