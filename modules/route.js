@@ -27,9 +27,10 @@ function Routes (app, passport) {
    */
   app.get('/', function(req, res, next) {
     if(req.isAuthenticated()){
-      client.hmset(
-          'users:' + req.user.provider + ":" + req.user.username
-        , req.user
+      req.session.user = req.user;
+      client.hset(
+          'USERS', req.user.id
+        , JSON.stringify(req.user)
       );
       res.redirect('/rooms');
     } else{

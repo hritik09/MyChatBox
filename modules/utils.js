@@ -56,7 +56,7 @@ exports.createRoom = function(req, res, client) {
     , room = {
         key: roomKey,
         name: req.body.room_name,
-        admin: req.user.provider + ":" + req.user.username,
+        admin: req.user.id,
         locked: 0,
         online: 0
       };
@@ -119,21 +119,23 @@ exports.getPublicRoomsInfo = function(client, fn) {
 exports.getUsersInRoom = function(req, res, client, room, fn) {
   client.smembers('rooms:' + req.params.id + ':online', function(err, online_users) {
     var users = [];
-
+    req.session.room = room;
     online_users.forEach(function(userKey, index) {
-      client.get('users:' + userKey + ':status', function(err, status) {
-        var msnData = userKey.split(':')
-          , username = msnData.length > 1 ? msnData[1] : msnData[0]
-          , provider = msnData.length > 1 ? msnData[0] : "twitter";
+      console.log(req.user);
+      console.log(req.session.passport.user);
+      client.hget('USERS', req.session.passport.user, function(err, userJson){
+        client.get('users:' + userKey + ':status', function(err, status) {
+          var user = JSON.parse(userJson);
+          var username = user.local.email;
 
-        users.push({
+          users.push({
             username: username,
-            provider: provider,
             status: status || 'available'
+          });
         });
       });
     });
-
+    req.session.users = users;
     fn(users);
 
   });
@@ -154,7 +156,7 @@ exports.getPublicRooms = function(client, fn){
  */
 
 exports.getUserStatus = function(user, client, fn){
-  client.get('users:' + user.provider + ":" + user.username + ':status', function(err, status) {
+  client.get('users:' + user.id + ':status', function(err, status) {
     if (!err && status) fn(status);
     else fn('available');
   });
@@ -169,8 +171,7 @@ exports.enterRoom = function(req, res, room, users, rooms, status){
   res.locals.room = room;
   res.locals.rooms = rooms;
   res.locals.user = {
-      nickname: req.user.username,
-      provider: req.user.provider,
+      nickname: req.user.local.email,
       status: status
     };
   res.locals.users_list = users

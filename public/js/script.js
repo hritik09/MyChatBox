@@ -11,7 +11,7 @@ $(function() {
 
   // Then check users online!
   $('.people a').each(function(index, element) {
-    USERS[$(element).data('provider') + ":" + $(element).data('username')] = 1;
+    USERS[$(element).data('username')] = 1;
   });
 
   //View handlers
@@ -57,21 +57,18 @@ $(function() {
 
       data.history.forEach(function(historyLine) {
         var time = new Date(historyLine.atTime)
-          , msnData = historyLine.from.split(':')
-          , nickname = msnData.length > 1 ? msnData[1] : msnData[0]
-          , provider = msnData.length > 1 ? msnData[0] : "twitter"
+          , nickname = historyLine.from
           , chatBoxData = {
               nickname: nickname,
-              provider: provider,
               msg: historyLine.withData,
               type: 'history',
               time: timeParser(time)
             };
 
         $lastInput = $('.chat .history').children().last();
-        lastInputUserKey = $lastInput.data('provider') + ':' + $lastInput.data('user');
+        lastInputUserKey = $lastInput.data('user');
 
-        if($lastInput.hasClass('chat-box') && lastInputUserKey === chatBoxData.provider + ':' + chatBoxData.nickname) {
+        if($lastInput.hasClass('chat-box') && lastInputUserKey === chatBoxData.nickname) {
           $lastInput.append(parseChatBoxMsg(ich.chat_box_text(chatBoxData)));
         } else {
           $('.chat .history').append(parseChatBox(ich.chat_box(chatBoxData)));
@@ -86,10 +83,10 @@ $(function() {
     var message = "$username has joined the room.";
 
     //If user is not 'there'
-    if(!$('.people a[data-username="' + data.nickname + '"][data-provider="' + data.provider + '"]').length) {
+    if(!$('.people a[data-username="' + data.nickname + '"]').length) {
       //Then add it
       $('.online .people').prepend(ich.people_box(data));
-      USERS[data.provider + ":" + data.nickname] = 1;
+      USERS[data.nickname] = 1;
 
       // Chat notice
       message = message
@@ -113,7 +110,7 @@ $(function() {
       }
     } else {
       //Instead, just check him as 'back'
-      USERS[data.provider + ":" + data.nickname] = 1;
+      USERS[data.nickname] = 1;
     }
   });
 
@@ -121,7 +118,7 @@ $(function() {
     var message = "$username is now $status.";
 
     // Update dropdown
-    if(data.username === $('#username').text() && data.provider === $('#provider').text()) {
+    if(data.username === $('#username').text()) {
       $('.dropdown-status .list a').toggleClass('current', false);
       $('.dropdown-status .list a.' + data.status).toggleClass('current', true);
 
@@ -132,7 +129,7 @@ $(function() {
     }
 
     // Update users list
-    $('.people a[data-username=' + data.username + '][data-provider="' + data.provider + '"]')
+    $('.people a[data-username=' + data.username + ']')
       .removeClass('available away busy')
       .addClass(data.status);
 
@@ -162,12 +159,12 @@ $(function() {
   socket.on('new msg', function(data) {
     var time = new Date(),
         $lastInput = $('.chat .current').children().last(),
-        lastInputUserKey = $lastInput.data('provider') + ':' + $lastInput.data('user');
+        lastInputUserKey = $lastInput.data('user');
 
     data.type = 'chat';
     data.time = timeParser(time)
 
-    if($lastInput.hasClass('chat-box') && lastInputUserKey === data.provider + ':' + data.nickname) {
+    if($lastInput.hasClass('chat-box') && lastInputUserKey === data.nickname) {
       $lastInput.append(parseChatBoxMsg(ich.chat_box_text(data)));
     } else {
       $('.chat .current').append(parseChatBox(ich.chat_box(data)));
@@ -188,7 +185,7 @@ $(function() {
       , message = "$username has left the room.";
     
     for (var userKey in USERS) {
-      if(userKey === data.provider + ":" + data.nickname && data.nickname != nickname) {
+      if(userKey === data.nickname) {
         //Mark user as leaving
         USERS[userKey] = 0;
 
@@ -197,7 +194,7 @@ $(function() {
           //If not re-connected
           if (!USERS[userKey]) {
             //Remove it and notify
-            $('.people a[data-username="' + data.nickname + '"][data-provider="' + data.provider + '"]').remove();
+            $('.people a[data-username="' + data.nickname + '"]').remove();
 
             // Chat notice
             message = message

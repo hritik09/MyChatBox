@@ -19,6 +19,7 @@ var sessionMiddleware = session({
                   secret: config.session.secret, 
                   store: sessionstore
                 });
+var sharedsession = require("express-socket.io-session");
 /*
  * Create and config server
  */
@@ -81,7 +82,7 @@ if(app.get('config').credentials) {
  */
 
 
-require('./modules/sockets')(app, exports.server, sessionMiddleware);
+require('./modules/sockets')(app, exports.server, sharedsession, sessionMiddleware);
 
 
 /*

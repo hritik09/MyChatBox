@@ -4,6 +4,7 @@
  */
 
 var sio = require('socket.io');
+var fs = require('fs');
 
 /**
  * Expose Sockets initialization
@@ -19,14 +20,14 @@ module.exports = Sockets;
  * @api public
  */
 
-function Sockets (app, server, sessionMiddleware) {
+function Sockets (app, server, sharedsession, sessionMiddleware) {
   var config = app.get('config');
   var client = app.get('redisClient');
 
   var io = sio.listen(server);
-  io.use(function(socket, next) {
-    sessionMiddleware(socket.request, socket.request.res, next);
-  });
+  io.use(sharedsession(sessionMiddleware, {
+    autoSave:true
+  }));
   // io.set('authorization', function (hsData, accept) {
   //   if(hsData.headers.cookie) {
   //     var cookies = parseCookies(cookie.parse(hsData.headers.cookie), config.session.secret)
@@ -53,19 +54,19 @@ function Sockets (app, server, sessionMiddleware) {
 
   io.sockets.on('connection', function (socket) {
     console.log('new connection');
-    var hs = socket.handshake
+    var session = socket.handshake.session
       // , nickname = hs.mychatbox.user.username
       // , provider = hs.mychatbox.user.provider
-      , nickname = 'hritik'
-      , provider = 'chatbox'
-      , userKey = provider + ":" + nickname
-      , room_id = 'hs.mychatbox.room'
+      , nickname = session.user.local.email
+      , userKey = session.user.id
+      , room_id = session.room.key
       , now = new Date()
       // Chat Log handler
       , chatlogFileName = './chats/' + room_id + (now.getFullYear()) + (now.getMonth() + 1) + (now.getDate()) + ".txt"
-      
-    console.log("handshake: "+hs);
-    console.log("session: "+socket.session);
+      //, chatlogWriteStream = fs.createWriteStream(chatlogFileName, {'flags': 'a'});
+
+    socket.join(room_id);
+    //console.log("session: "+JSON.stringify(socket.handshake.session));
 
     client.sadd('sockets:for:' + userKey + ':at:' + room_id, socket.id, function(err, socketAdded) {
       if(socketAdded) {
@@ -76,7 +77,6 @@ function Sockets (app, server, sessionMiddleware) {
             client.get('users:' + userKey + ':status', function(err, status) {
               io.sockets.in(room_id).emit('new user', {
                 nickname: nickname,
-                provider: provider,
                 status: status || 'available'
               });
             });
@@ -95,11 +95,10 @@ function Sockets (app, server, sessionMiddleware) {
           withData: data.msg
         }
 
-        // chatlogWriteStream.write(JSON.stringify(chatlogRegistry) + "\n");
+         //chatlogWriteStream.write(JSON.stringify(chatlogRegistry) + "\n");
         
         io.sockets.in(room_id).emit('new msg', {
           nickname: nickname,
-          provider: provider,
           msg: data.msg
         });        
       }   
@@ -111,7 +110,6 @@ function Sockets (app, server, sessionMiddleware) {
       client.set('users:' + userKey + ':status', status, function(err, statusSet) {
         io.sockets.emit('user-info update', {
           username: nickname,
-          provider: provider,
           status: status
         });
       });
@@ -149,7 +147,6 @@ function Sockets (app, server, sessionMiddleware) {
                   // chatlogWriteStream.destroySoon();
                   io.sockets.in(room_id).emit('user leave', {
                     nickname: nickname,
-                    provider: provider
                   });
                 }
               });
