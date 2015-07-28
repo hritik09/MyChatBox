@@ -1,8 +1,8 @@
 script#chat_box(type='text/html')
   .chat-box(data-user='{{ nickname }}', data-type='{{ type }}')
     div(class="avatar avatar-")
-      img(src='http://avatars.io/{{ nickname }}')
-      a(href="https://{{ nickname }}")(target='_blank')
+      img(src='http://localhost:8080/{{ nickname }}')
+      a(href="http://localhost:8080/{{ nickname }}")(target='_blank')
     h5
       | {{ nickname }}
     {{> chat_box_text }}
@@ -23,4 +23,4 @@ script#people_box(type='text/html')
     | {{ nickname }}
 
 script#title_template(type='text/html')
-  | {{#count}} ({{ count }}) {{/count}} {{ roomName }} - Balloons.IO
+  | {{#count}} ({{ count }}) {{/count}} {{ roomName }} - MyChatBox
